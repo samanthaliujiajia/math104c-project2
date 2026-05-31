@@ -174,15 +174,38 @@ stability condition, and \(\lambda=0.6\), which violates it.
 
 \section{Problem C: Additional Experiments}
 
-The first additional experiment solves a Poisson equation with a manufactured
-solution:
+For Problem C, I chose two of the listed additional experiment options:
+\textbf{Option 1(b)}, adding a source term and solving a Poisson equation, and
+\textbf{Option 2}, changing the initial condition for the heat equation. These
+two choices extend the required Problems A and B without changing the overall
+finite-difference framework, so the results can be compared directly with the
+earlier experiments.
+
+\subsection*{Experiment C1: Poisson Equation with a Source Term}
+
+This experiment investigates the Poisson problem
 \[
   u_{xx}+u_{yy}=-2\pi^2\sin(\pi x)\sin(\pi y),\qquad
   u=0 \text{ on the boundary}.
 \]
-The exact solution is \(u(x,y)=\sin(\pi x)\sin(\pi y)\). Unlike Problem A, this
-solution is not bilinear, so the second-order spatial truncation error is
-visible in the grid refinement results.
+This corresponds to option 1(b) from the project instructions. The source term
+is chosen by the method of manufactured solutions so that the exact solution is
+\[
+  u(x,y)=\sin(\pi x)\sin(\pi y).
+\]
+
+This experiment is interesting because it keeps the same elliptic five-point
+stencil as Problem A, but it removes the special bilinear exactness of
+\(u(x,y)=100xy\). In Problem A, the stencil reproduces the exact solution up to
+roundoff error. Here, the solution has curvature in both spatial directions, so
+the \(O(h^2)\) truncation error of the five-point method becomes visible.
+
+The numerical results are shown in the elliptic error table and in the figures
+below. The heatmap for \(h=1/8\) compares the exact solution, the numerical
+solution, and the absolute error. The convergence plot shows that the error
+decreases as \(h\) is refined from \(1/4\) to \(1/16\). This behavior agrees
+with the theory for the centered five-point approximation, whose local
+truncation error is second order in space.
 
 \begin{figure}[H]
 \centering
@@ -196,7 +219,11 @@ visible in the grid refinement results.
 \caption{Problem C1 max error under mesh refinement.}
 \end{figure}
 
-The second additional experiment changes the heat equation initial condition to
+\subsection*{Experiment C2: Different Heat Equation Initial Condition}
+
+This experiment investigates option 2 from the project instructions: changing
+the initial condition for the heat equation. Instead of using
+\(\sin(\pi x)\), as in Problem B, I use
 \[
   u(x,0)=\sin(2\pi x),
 \]
@@ -204,8 +231,22 @@ whose exact solution is
 \[
   u(x,t)=e^{-4\pi^2t}\sin(2\pi x).
 \]
-This higher-frequency mode decays faster and is more demanding for a coarse
-mesh.
+The same boundary conditions \(u(0,t)=u(1,t)=0\) are used.
+
+This experiment is interesting because \(\sin(2\pi x)\) is a higher-frequency
+mode than the initial condition in Problem B. It oscillates more rapidly in
+space and decays faster in time, since the exponential factor is
+\(e^{-4\pi^2t}\) instead of \(e^{-\pi^2t}\). A coarse grid has fewer points per
+wavelength, so the spatial discretization has a harder job resolving the
+solution accurately.
+
+The numerical results are shown in the heat equation error table and in the
+figures below. The final-time profile compares Forward Difference, Backward
+Difference, and Crank--Nicolson against the exact solution. The convergence
+plot shows how the error changes under stable mesh refinement. The observed
+behavior is consistent with heat equation theory: physical high-frequency modes
+decay quickly, but numerical accuracy still depends on resolving the spatial
+mode and choosing a stable time step.
 
 \begin{figure}[H]
 \centering
