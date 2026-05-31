@@ -34,24 +34,67 @@ exact solution is available, the absolute error is computed at mesh points.
 
 \section{Numerical Methods}
 
-For elliptic equations on the unit square, the five-point stencil approximates
+For elliptic equations on the unit square, the unknowns are the interior grid
+values \(w_{ij}\). The boundary values are known from the problem statement and
+are moved to the right-hand side of the linear system. At each interior point,
+the five-point stencil approximates
 \[
   u_{xx}(x_i,y_j)+u_{yy}(x_i,y_j)
   \approx
   \frac{w_{i+1,j}+w_{i-1,j}+w_{i,j+1}+w_{i,j-1}-4w_{i,j}}{h^2}.
 \]
-Boundary values enter the right-hand side of the resulting sparse linear
-system. The experiments solve the system both by a sparse direct solver and by
-successive over-relaxation (SOR).
+For the Laplace problem this gives
+\[
+  w_{i+1,j}+w_{i-1,j}+w_{i,j+1}+w_{i,j-1}-4w_{ij}=0,
+\]
+while for the Poisson experiment the right-hand side is \(h^2 f(x_i,y_j)\).
+The coefficient matrix is sparse because each interior point only interacts
+with its four nearest neighbors.
+
+I solve the elliptic systems in two ways. The sparse direct solver is used as a
+baseline because it solves the matrix equation \(Aw=b\) in one algebraic step.
+I also use successive over-relaxation (SOR), which updates the approximate
+solution point by point:
+\[
+  w_{ij}^{(m+1)}
+  =(1-\omega)w_{ij}^{(m)}
+  +\frac{\omega}{4}
+  \left(w_{i+1,j}+w_{i-1,j}+w_{i,j+1}+w_{i,j-1}-h^2 f_{ij}\right).
+\]
+In the experiments I use \(\omega=1.6\) and stop when the residual is below the
+chosen tolerance. Reporting the iteration count helps compare accuracy with
+computational effort.
 
 For the heat equation \(u_t=u_{xx}\), the Forward-Difference method is
 \[
   w_{i,j+1}=\lambda w_{i-1,j}+(1-2\lambda)w_{i,j}+\lambda w_{i+1,j},
   \qquad \lambda=\frac{k}{h^2}.
 \]
-It is conditionally stable for \(\lambda\leq 1/2\). The Backward-Difference
-method and Crank--Nicolson method require solving tridiagonal linear systems at
-each time step, but they remain stable for much larger time steps.
+This method is explicit, so each new time level is computed directly from the
+previous one. Its simplicity is useful, but it is only conditionally stable for
+\(\lambda\leq 1/2\).
+
+The Backward-Difference method uses the spatial second difference at the new
+time level:
+\[
+  -\lambda w_{i-1,j+1}+(1+2\lambda)w_{i,j+1}
+  -\lambda w_{i+1,j+1}=w_{i,j}.
+\]
+This produces a tridiagonal linear system at each time step. It is first-order
+accurate in time, but its implicit form is unconditionally stable for the heat
+equation.
+
+Crank--Nicolson averages the spatial second difference between the old and new
+time levels. In matrix form it can be written as
+\[
+  \left(I-\frac{\lambda}{2}A\right)w^{j+1}
+  =
+  \left(I+\frac{\lambda}{2}A\right)w^j,
+\]
+where \(A\) is the centered second-difference matrix. This method is also
+implicit, but it has second-order accuracy in time. Comparing these three heat
+methods makes the tradeoff between explicit simplicity, implicit stability, and
+temporal accuracy visible in the numerical results.
 
 \section{Problem A: Elliptic PDE}
 
@@ -70,7 +113,7 @@ check that boundary values and matrix assembly are correct.
 \begin{table}[H]
 \centering
 \caption{Elliptic PDE error summary and SOR iteration counts.}
-\resizebox{\textwidth}{!}{\input{outputs/tables/elliptic_error_summary.tex}}
+{\small\input{outputs/tables/elliptic_error_summary.tex}}
 \end{table}
 
 \begin{table}[H]
