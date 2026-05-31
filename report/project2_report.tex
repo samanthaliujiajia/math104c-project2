@@ -1,0 +1,254 @@
+\documentclass[11pt]{article}
+
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath, amssymb}
+\usepackage{booktabs}
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage{hyperref}
+
+\graphicspath{{outputs/figures/}}
+\setlength{\parskip}{0.6em}
+\setlength{\parindent}{0pt}
+
+\title{Math 104C Project 2: Numerical Methods for Partial Differential Equations}
+\author{Jiajia Liu \\ Perm ID: A0J2E85}
+\date{}
+
+\begin{document}
+\maketitle
+
+\textbf{Code link:} \href{https://github.com/samanthaliujiajia/math104c-project2}{https://github.com/samanthaliujiajia/math104c-project2}
+
+\section{Introduction}
+
+This project investigates finite-difference methods for elliptic and parabolic
+partial differential equations. The experiments compare accuracy, stability,
+mesh refinement, and computational behavior for the five-point finite-difference
+method, Forward Difference, Backward Difference, and Crank--Nicolson.
+
+The elliptic experiments use square grids with \(h=1/4\), \(h=1/8\), and
+\(h=1/16\). The heat equation experiments use multiple choices of \(h\) and
+\(k\), including both stable and unstable Forward-Difference cases. Whenever an
+exact solution is available, the absolute error is computed at mesh points.
+
+\section{Numerical Methods}
+
+For elliptic equations on the unit square, the five-point stencil approximates
+\[
+  u_{xx}(x_i,y_j)+u_{yy}(x_i,y_j)
+  \approx
+  \frac{w_{i+1,j}+w_{i-1,j}+w_{i,j+1}+w_{i,j-1}-4w_{i,j}}{h^2}.
+\]
+Boundary values enter the right-hand side of the resulting sparse linear
+system. The experiments solve the system both by a sparse direct solver and by
+successive over-relaxation (SOR).
+
+For the heat equation \(u_t=u_{xx}\), the Forward-Difference method is
+\[
+  w_{i,j+1}=\lambda w_{i-1,j}+(1-2\lambda)w_{i,j}+\lambda w_{i+1,j},
+  \qquad \lambda=\frac{k}{h^2}.
+\]
+It is conditionally stable for \(\lambda\leq 1/2\). The Backward-Difference
+method and Crank--Nicolson method require solving tridiagonal linear systems at
+each time step, but they remain stable for much larger time steps.
+
+\section{Problem A: Elliptic PDE}
+
+Problem A solves
+\[
+  u_{xx}+u_{yy}=0,\qquad 0<x<1,\quad 0<y<1,
+\]
+with boundary conditions
+\[
+  u(0,y)=0,\quad u(x,0)=0,\quad u(x,1)=100x,\quad u(1,y)=100y.
+\]
+The exact solution is \(u(x,y)=100xy\), which is bilinear. Since the five-point
+stencil is exact for this function up to roundoff, this problem is a useful
+check that boundary values and matrix assembly are correct.
+
+\begin{table}[H]
+\centering
+\caption{Elliptic PDE error summary and SOR iteration counts.}
+\resizebox{\textwidth}{!}{\input{outputs/tables/elliptic_error_summary.tex}}
+\end{table}
+
+\begin{table}[H]
+\centering
+\caption{Observed orders for elliptic experiments.}
+\input{outputs/tables/elliptic_observed_orders.tex}
+\end{table}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\textwidth]{problem_A_Direct_h0p125.pdf}
+\caption{Problem A exact solution, numerical solution, and absolute error for \(h=1/8\).}
+\end{figure}
+
+\section{Problem B: Heat Equation}
+
+Problem B solves
+\[
+  u_t=u_{xx},\qquad 0<x<1,\quad t>0,
+\]
+with \(u(0,t)=u(1,t)=0\) and \(u(x,0)=\sin(\pi x)\). The exact solution is
+\[
+  u(x,t)=e^{-\pi^2t}\sin(\pi x).
+\]
+The Forward-Difference experiments include \(\lambda=0.4\), which satisfies the
+stability condition, and \(\lambda=0.6\), which violates it.
+
+\begin{table}[H]
+\centering
+\caption{Heat equation error summary.}
+\resizebox{\textwidth}{!}{\input{outputs/tables/heat_error_summary.tex}}
+\end{table}
+
+\begin{table}[H]
+\centering
+\caption{Observed orders for stable heat equation refinement cases.}
+\input{outputs/tables/heat_observed_orders.tex}
+\end{table}
+
+\begin{figure}[H]
+\centering
+\begin{minipage}{0.48\textwidth}
+\includegraphics[width=\textwidth]{B_stable_h0.1_final_profiles.pdf}
+\centering Stable Forward case, \(\lambda=0.4\).
+\end{minipage}
+\begin{minipage}{0.48\textwidth}
+\includegraphics[width=\textwidth]{B_unstable_h0.1_final_profiles.pdf}
+\centering Unstable Forward case, \(\lambda=0.6\).
+\end{minipage}
+\caption{Problem B final-time solution profiles.}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.74\textwidth]{problem_B_convergence.pdf}
+\caption{Problem B max error under stable mesh refinement.}
+\end{figure}
+
+\section{Problem C: Additional Experiments}
+
+The first additional experiment solves a Poisson equation with a manufactured
+solution:
+\[
+  u_{xx}+u_{yy}=-2\pi^2\sin(\pi x)\sin(\pi y),\qquad
+  u=0 \text{ on the boundary}.
+\]
+The exact solution is \(u(x,y)=\sin(\pi x)\sin(\pi y)\). Unlike Problem A, this
+solution is not bilinear, so the second-order spatial truncation error is
+visible in the grid refinement results.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\textwidth]{problem_C1_Direct_h0p125.pdf}
+\caption{Poisson manufactured-solution experiment for \(h=1/8\).}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.74\textwidth]{problem_C1_convergence.pdf}
+\caption{Problem C1 max error under mesh refinement.}
+\end{figure}
+
+The second additional experiment changes the heat equation initial condition to
+\[
+  u(x,0)=\sin(2\pi x),
+\]
+whose exact solution is
+\[
+  u(x,t)=e^{-4\pi^2t}\sin(2\pi x).
+\]
+This higher-frequency mode decays faster and is more demanding for a coarse
+mesh.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.74\textwidth]{C2_stable_h0.1_final_profiles.pdf}
+\caption{Problem C2 final-time profiles for the different initial condition.}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.74\textwidth]{problem_C2_convergence.pdf}
+\caption{Problem C2 max error under stable mesh refinement.}
+\end{figure}
+
+\section{Discussion and Analysis}
+
+Problem A confirms both the finite-difference stencil and the treatment of
+boundary data. Since the exact solution \(u(x,y)=100xy\) is bilinear, the
+second derivatives are represented exactly by the centered difference formula up
+to roundoff error. Therefore, the small errors in the table are not surprising:
+they mainly measure floating-point error and the accuracy of the linear solve,
+not truncation error. This is still an important test because an incorrect sign
+in the matrix or a missing boundary contribution would immediately destroy the
+linear solution.
+
+The direct solver and SOR solver give essentially the same numerical solution,
+but their computational behavior is different. The sparse direct solver treats
+the linear system as one algebraic problem. SOR updates the grid values
+repeatedly, so the number of iterations grows as the mesh is refined. This is a
+typical feature of stationary iterative methods: finer grids have more unknowns,
+and information moves across the domain gradually through local updates. The
+residuals show that the iteration was stopped only after the algebraic system
+was solved to a tight tolerance.
+
+Problem B illustrates the central stability difference between explicit and
+implicit time stepping. For the heat equation, the Forward-Difference method is
+consistent with local truncation error \(O(k+h^2)\), but consistency alone does
+not guarantee useful numerical results. The method also needs
+\(\lambda=k/h^2\leq 1/2\). In the stable case, the final-time profiles remain
+smooth and the error decreases under refinement. In the unstable case, the
+method amplifies high-frequency error modes instead of damping them, so the
+computed solution can develop nonphysical oscillations even though the exact
+heat equation smooths and decays the solution.
+
+Backward Difference and Crank--Nicolson behave differently because the new time
+level is included implicitly. Backward Difference is more diffusive, which can
+make it slightly less accurate for the same mesh, but that diffusion is also why
+it strongly damps unstable modes. Crank--Nicolson is less artificially
+dissipative and has second-order temporal accuracy, so it usually gives a better
+balance between accuracy and stability. The experiments show this tradeoff:
+implicit methods require solving a linear system at every time step, but they
+allow larger \(k\) without the Forward-Difference stability failure.
+
+The Poisson manufactured-solution experiment is a better test of spatial
+convergence than Problem A because \(u=\sin(\pi x)\sin(\pi y)\) is not exactly
+represented by the five-point stencil. The observed errors decrease as the mesh
+is refined, which matches the theoretical second-order behavior of the centered
+spatial approximation. This experiment also shows why manufactured solutions
+are useful: the source term is chosen so the exact solution is known, making it
+possible to measure the numerical error directly.
+
+The second additional experiment changes the heat equation initial condition to
+\(\sin(2\pi x)\). This mode has a higher spatial frequency and decays like
+\(e^{-4\pi^2t}\), much faster than the \(\sin(\pi x)\) mode. Numerically, this
+means a coarse mesh has fewer points per wavelength, so spatial resolution
+matters more. The experiment connects error propagation with the structure of
+the PDE: the heat equation damps high-frequency physical modes, but a numerical
+method can still introduce additional error if the grid or time step is too
+coarse.
+
+Overall, the experiments show the relationship between consistency, stability,
+and convergence. The finite-difference formulas are consistent approximations,
+but stability determines whether the accumulated error remains controlled. For
+elliptic problems, the main computational issue is solving the sparse linear
+system accurately and efficiently. For parabolic problems, the choice of time
+step is just as important as the spatial mesh, especially for explicit methods.
+Thus the best method depends not only on formal order, but also on stability
+requirements and computational cost.
+
+\section{Conclusion}
+
+The experiments support the theoretical results for finite-difference PDE
+methods. The five-point elliptic method is accurate and has a sparse matrix
+structure that can be solved either directly or iteratively. For parabolic
+problems, consistency alone is not enough: the Forward-Difference method also
+requires the stability condition \(\lambda\leq 1/2\). Backward Difference and
+Crank--Nicolson are more stable for large time steps, with Crank--Nicolson
+offering higher temporal accuracy.
+
+\end{document}

@@ -1,0 +1,7 @@
+problem,method,observed_order
+B,Backward Difference,1.9815009783230022
+B,Crank-Nicolson,1.9839308665424462
+B,Forward Difference,2.0148903964747285
+C2,Backward Difference,1.8576389400995705
+C2,Crank-Nicolson,1.8626502436892902
+C2,Forward Difference,1.9890598438589575

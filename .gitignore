@@ -1,0 +1,10 @@
+report/build/
+__pycache__/
+*.pyc
+*.aux
+*.fdb_latexmk
+*.fls
+*.log
+*.out
+*.synctex.gz
+Project 2 detailed instructions.pdf

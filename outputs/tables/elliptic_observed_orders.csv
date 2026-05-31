@@ -1,0 +1,5 @@
+problem,method,observed_order
+A,Direct,-0.7924812503605781
+A,SOR omega=1.6,-1.9803352724180558
+C1,Direct,2.0210604106412147
+C1,SOR omega=1.6,2.0210605439182503
