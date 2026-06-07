@@ -34,6 +34,14 @@ exact solution is available, the absolute error is computed at mesh points.
 
 \section{Numerical Methods}
 
+Throughout the report, \(h\) denotes the spatial mesh width and \(k\) denotes
+the time step for parabolic problems. For elliptic problems, grid points are
+\((x_i,y_j)=(ih,jh)\), and \(w_{ij}\) is the numerical approximation to
+\(u(x_i,y_j)\). For heat equation problems, \(w_{i,j}\) denotes the
+approximation to \(u(x_i,t_j)\), where \(x_i=ih\) and \(t_j=jk\). The parameter
+\(\lambda=k/h^2\) is the heat equation mesh ratio that controls the stability
+of the Forward-Difference method.
+
 For elliptic equations on the unit square, the unknowns are the interior grid
 values \(w_{ij}\). The boundary values are known from the problem statement and
 are moved to the right-hand side of the linear system. At each interior point,
@@ -53,6 +61,9 @@ with its four nearest neighbors.
 
 I solve the elliptic systems in two ways. The sparse direct solver is used as a
 baseline because it solves the matrix equation \(Aw=b\) in one algebraic step.
+Here \(A\) is the sparse coefficient matrix created by the five-point stencil,
+\(w\) is the vector of all unknown interior grid values, and \(b\) contains the
+source term and boundary contributions.
 I also use successive over-relaxation (SOR), which updates the approximate
 solution point by point:
 \[
@@ -61,7 +72,9 @@ solution point by point:
   +\frac{\omega}{4}
   \left(w_{i+1,j}+w_{i-1,j}+w_{i,j+1}+w_{i,j-1}-h^2 f_{ij}\right).
 \]
-In the experiments I use \(\omega=1.6\) and stop when the residual is below the
+In this formula, \(m\) is the iteration number, \(f_{ij}=f(x_i,y_j)\), and
+\(\omega\) is the relaxation parameter. In the experiments I use
+\(\omega=1.6\) and stop when the residual \(\|Aw-b\|_\infty\) is below the
 chosen tolerance. Reporting the iteration count helps compare accuracy with
 computational effort.
 
@@ -95,6 +108,11 @@ where \(A\) is the centered second-difference matrix. This method is also
 implicit, but it has second-order accuracy in time. Comparing these three heat
 methods makes the tradeoff between explicit simplicity, implicit stability, and
 temporal accuracy visible in the numerical results.
+
+Thus the four required methods from the project instructions are all included:
+the five-point finite-difference method for elliptic PDEs, the
+Forward-Difference method for the heat equation, the Backward-Difference method
+for the heat equation, and the Crank--Nicolson method.
 
 \section{Problem A: Elliptic PDE}
 
